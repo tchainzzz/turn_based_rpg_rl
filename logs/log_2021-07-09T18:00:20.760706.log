@@ -1,0 +1,6 @@
+[DEBUG] 2021-07-09 18:00:20,773 turn_based_env.py:298 - PARTY 0 --(basic)-> ENEMY [0]
+
+[DEBUG] 2021-07-09 18:00:20,773 turn_based_env.py:338 - ENEMY 0 (test_enemy) --(basic)-> PARTY [0]
+
+[DEBUG] 2021-07-09 18:00:20,773 turn_based_env.py:338 - ENEMY 1 (test_enemy) --(basic)-> PARTY [0]
+
