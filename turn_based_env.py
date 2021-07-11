@@ -124,11 +124,11 @@ class EntityBank:
     def create_item(self, name: str) -> Item:
         return Item(name=name, **self.item_data.loc[name].to_dict())
 
-    def create_ally(self, name: str) -> Ally:
-        return Ally(name=name, **self.ally_data.loc[name].to_dict())
+    def create_ally(self, name: str, position: int) -> Ally:
+        return Ally(name=name, position=position, **self.ally_data.loc[name].to_dict())
 
-    def create_enemy(self, name: str) -> Enemy:
-        return Enemy(name=name, **self.enemy_data.loc[name].to_dict())
+    def create_enemy(self, name: str, position: int) -> Enemy:
+        return Enemy(name=name, position=position, **self.enemy_data.loc[name].to_dict())
 
     def get_legal_enemies(self, difficulty: int) -> List[str]:
         difficulty_lb = (self.enemy_data['min_level'] <= difficulty)
@@ -164,7 +164,9 @@ class TurnBasedRPGEnv(object):
             action_file=action_file,
         )
         self.state = State([
-            self.entity_bank.create_ally(ally_class) for ally_class in party],
+            self.entity_bank.create_ally(ally_class, position=i) \
+                        for i, ally_class \
+                        in enumerate(party)],
             difficulty=starting_difficulty,
         )
         self.dungeon_repeat_interval = dungeon_repeat_interval
@@ -176,7 +178,9 @@ class TurnBasedRPGEnv(object):
 
     def reset(self):
         self.seed()
-        party = [self.entity_bank.create_ally(ally_class) for ally_class in self.original_party]
+        party = [self.entity_bank.create_ally(ally_class, position=i) \
+                    for i, ally_class \
+                    in enumerate(self.original_party)]
         self.state = State(party, difficulty=self.starting_difficulty)
         self.action_step = 0
         self.new_level()
@@ -192,7 +196,8 @@ class TurnBasedRPGEnv(object):
         legal_enemy_list = self.entity_bank.get_legal_enemies(effective_difficulty)
         for _ in range(n_enemies):
             enemy_name = random.choice(legal_enemy_list)
-            enemies.append(self.entity_bank.create_enemy(enemy_name))
+            enemy = self.entity_bank.create_enemy(enemy_name, position=len(enemies))
+            enemies.append(enemy)
         self.state.set_enemies(enemies)
         # generate base enemies
         # scale stats based on difficulty      

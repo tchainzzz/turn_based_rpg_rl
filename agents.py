@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import random
+import string
 from typing import List, Tuple
 
 import numpy as np
@@ -9,9 +10,12 @@ from interactibles import Item
 
 PARTY_DEATH_PENALTY = 0
 
+ID_LENGTH = 8
+
 @dataclass
 class Agent:
     name: str
+    position: int
     hp: int
     mp: int
     attack: int
@@ -25,6 +29,7 @@ class Agent:
         self.max_hp = self.hp
         self.max_mp = self.mp
         self.special_moves = self.special_moves.strip().split()
+        self.id = str(self.position) + '_' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=ID_LENGTH))
 
     def execute(self, state, action, target_list):
         reward = 0
@@ -38,11 +43,11 @@ class Agent:
             target.hp = np.clip(target.hp + action.hp_delta, 0, target.max_hp)
             if target.hp == 0:
                 if isinstance(target, Ally):
-                    logger.info(f"KILL: PARTY {state.party.index(target)} (-{-PARTY_DEATH_PENALTY})")
+                    logger.info(f"KILL: PARTY {target.name} (id: {target.id}) (-{-PARTY_DEATH_PENALTY})")
                     state.party.remove(target)
                     reward += PARTY_DEATH_PENALTY
                 else: # Enemy
-                    logger.info(f"KILL: ENEMY {state.enemies.index(target)} (+{target.gold})")
+                    logger.info(f"KILL: ENEMY {target.name} (id: {target.id}) (+{target.gold})")
                     state.enemies.remove(target)
                     state.gold += target.gold
                     reward += target.gold
@@ -71,6 +76,9 @@ class Agent:
     def get_legal_actions(self):
         action_names = ['basic'] + self.special_moves
         return action_names
+
+    def __eq__(self, other):
+        return self is other
 
 
 @dataclass
