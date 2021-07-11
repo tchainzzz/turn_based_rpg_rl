@@ -1,7 +1,9 @@
 from turn_based_env import *
 
+import random
+
 if __name__ == '__main__':
-    env = TurnBasedRPGEnv(['test_ally'], ally_file="allies.csv", enemy_file="enemies.csv")
+    env = TurnBasedRPGEnv(['hero'], ally_file="allies.csv", enemy_file="enemies.csv", action_file="actions.csv")
     curr_player = env.state.current_player()
     action_names = curr_player.get_legal_actions()
     actions = [env.entity_bank.create_action(a, curr_player) for a in action_names]
@@ -9,4 +11,5 @@ if __name__ == '__main__':
     env.reset()
     is_terminal = False
     while not is_terminal:
-        *_, is_terminal = env.step(actions[0], [env.state.enemies[0]])
+        action = random.choice(actions)
+        *_, is_terminal = env.step(action, random.choices(env.state.enemies, k=action.n_targets))

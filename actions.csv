@@ -1,0 +1,2 @@
+name,n_targets,target_type,hp_cost,mp_cost,attack_cost,defense_cost,status_self,status_self_p,hp_delta,mp_delta,attack_delta,defense_delta,status_target,status_target_p,effect_duration
+mega_slash,1,enemy,0,5,0,0,None,1.,-10,0,0,0,None,1.,0
