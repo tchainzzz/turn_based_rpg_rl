@@ -19,6 +19,8 @@ GOLD_REWARD_WEIGHT = 1
 LEVEL_REWARD_WEIGHT = 0
 TIME_PENALTY_WEIGHT = 0
 
+N_ENEMIES_MAP = [1, 1, 1, 2, 1, 2, 2, 3, 4, 1]
+
 
 @dataclass
 class Item:
@@ -191,17 +193,18 @@ class TurnBasedRPGEnv(object):
 
     def new_level(self):
         # determine the number of enemies needed
-        n_enemies = 2
+        n_enemies = N_ENEMIES_MAP[self.state.difficulty % len(N_ENEMIES_MAP)]
         enemies = []
         effective_difficulty = self.state.difficulty % self.dungeon_repeat_interval
         legal_enemy_list = self.entity_bank.get_legal_enemies(effective_difficulty)
         for _ in range(n_enemies):
             enemy_name = random.choice(legal_enemy_list)
             enemy = self.entity_bank.create_enemy(enemy_name, position=len(enemies))
+            # TODO: scale stats based on difficulty      
             enemies.append(enemy)
         self.state.set_enemies(enemies)
-        # generate base enemies
-        # scale stats based on difficulty      
+        enemy_list = [e.id for e in enemies]
+        logger.info(f"NEW LEVEL {self.state.difficulty}: {enemy_list}")
 
     def step(self, action: Action, targets: List[Agent], dry_run: Optional[bool] = False) -> Tuple[Tuple, int, bool]:
         reward = 0
@@ -223,7 +226,7 @@ class TurnBasedRPGEnv(object):
         # if all enemies are defeated, start the next level
         if len(self.state.enemies) == 0:
             self.state.difficulty += 1
-            logger.debug(f"GENERATE NEW LEVEL {self.state.difficulty} (+{NEW_LEVEL_REWARD})")
+            logger.debug(f"LEVEL {self.state.difficulty} COMPLETE (+{NEW_LEVEL_REWARD})")
             reward += LEVEL_REWARD_WEIGHT * NEW_LEVEL_REWARD
             self.new_level()
         else:
