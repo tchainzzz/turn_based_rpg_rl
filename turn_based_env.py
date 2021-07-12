@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy, deepcopy
 from dataclasses import dataclass
 import random
 from typing import List, Optional, Tuple
@@ -184,7 +184,7 @@ class TurnBasedRPGEnv(object):
         self.state = State(party, difficulty=self.starting_difficulty)
         self.action_step = 0
         self.new_level()
-        print("INITIAL STATE\n{self.state.format_battle_table()}")
+        print(f"INITIAL STATE\n{self.state.format_battle_table()}")
 
     def seed(self, seed: Optional[int] = 42):
         random.seed(seed)
@@ -250,7 +250,7 @@ class TurnBasedRPGEnv(object):
             if enemy_action.n_targets > 0:
                 target = random.sample(state.party, enemy_action.n_targets)
             else:
-                target = state.party
+                target = copy(state.party)
             target_ids = [t.id for t in target]
             logger.debug(f"ENEMY {i} ({enemy.name}) --({enemy_action.name})-> PARTY {target_ids}")
             state, _ = enemy.execute(state, enemy_action, target)

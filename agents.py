@@ -62,7 +62,7 @@ class Agent:
                     state.enemies.remove(target)
                     state.gold += target.gold
                     reward += target.gold
-                break
+                continue
             target.mp = np.clip(target.mp + action.mp_delta, 0, target.max_mp)
             target.attack = max(target.attack + action.attack_delta, 0)
             target.defense = max(target.defense + action.defense_delta, 0)
