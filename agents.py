@@ -8,8 +8,9 @@ import numpy as np
 from base_logger import logger
 from interactibles import Item
 
-PARTY_DEATH_PENALTY = 0
 
+FALLBACK_ATTACK_NAME = 'basic'
+PARTY_DEATH_PENALTY = 0
 ID_LENGTH = 8
 
 @dataclass
@@ -29,7 +30,16 @@ class Agent:
         self.max_hp = self.hp
         self.max_mp = self.mp
         self.special_moves = self.special_moves.strip().split()
-        self.id = str(self.position) + '_' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=ID_LENGTH))
+        self.id = f"{self.name}@{self.position}"
+
+    def short_repr(self):
+        repr_str = ""
+        if isinstance(self, Ally):
+            repr_str += "PARTY"
+        else:
+            repr_str += "ENEMY"
+        repr_str += f" {self.name} (id: {self.id})"
+        return repr_str
 
     def execute(self, state, action, target_list):
         reward = 0
@@ -42,12 +52,13 @@ class Agent:
         for target in target_list:
             target.hp = np.clip(target.hp + action.hp_delta, 0, target.max_hp)
             if target.hp == 0:
+                info_str = target.short_repr()
                 if isinstance(target, Ally):
-                    logger.info(f"KILL: PARTY {target.name} (id: {target.id}) (-{-PARTY_DEATH_PENALTY})")
+                    logger.info(f"KILL: {info_str} (-{-PARTY_DEATH_PENALTY})")
                     state.party.remove(target)
                     reward += PARTY_DEATH_PENALTY
                 else: # Enemy
-                    logger.info(f"KILL: ENEMY {target.name} (id: {target.id}) (+{target.gold})")
+                    logger.info(f"KILL: {info_str} (+{target.gold})")
                     state.enemies.remove(target)
                     state.gold += target.gold
                     reward += target.gold
@@ -73,8 +84,16 @@ class Agent:
                         agent.statuses.remove(status)
         return state
 
-    def get_legal_actions(self):
-        action_names = ['basic'] + self.special_moves
+    def get_candidate_moves(self):
+        return self.special_moves
+
+    def get_legal_actions(self, entity_bank):
+        action_names = [FALLBACK_ATTACK_NAME]
+        for move_name in self.get_candidate_moves():
+            if self.mp >= entity_bank.action_data.loc[move_name].get('mp_cost'):
+                action_names.append(move_name)
+        info_str = self.short_repr()
+        logger.debug(f"{info_str} ACTIONS: {action_names}")
         return action_names
 
     def __eq__(self, other):
@@ -92,9 +111,8 @@ class Ally(Agent):
         self.hp += item.hp_bonus
         self.mp += item.mp_bonus
 
-    def get_legal_actions(self):
-        action_names = ['basic'] + self.special_moves + [item.move for item in self.items]
-        return action_names
+    def get_candidate_moves(self):
+        return self.special_moves + [item.move for item in self.items]
 
 
 @dataclass

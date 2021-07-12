@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 
 import pandas as pd
 
-from agents import Agent, Ally, Enemy
+from agents import Agent, Ally, Enemy, FALLBACK_ATTACK_NAME
 from base_logger import logger
 from statuses import StatusManager
 
@@ -136,7 +136,7 @@ class EntityBank:
         return self.enemy_data[difficulty_lb & difficulty_ub].index.tolist()
 
     def create_action(self, name: str, agent: Optional[Agent] = None) -> Action:
-        if name == 'basic':
+        if name == FALLBACK_ATTACK_NAME:
             return Action(
                 name=name,
                 n_targets=1,
@@ -184,6 +184,7 @@ class TurnBasedRPGEnv(object):
         self.state = State(party, difficulty=self.starting_difficulty)
         self.action_step = 0
         self.new_level()
+        print("INITIAL STATE\n{self.state.format_battle_table()}")
 
     def seed(self, seed: Optional[int] = 42):
         random.seed(seed)
@@ -209,8 +210,8 @@ class TurnBasedRPGEnv(object):
             return self.state, reward, True
         copy_state = deepcopy(self.state)
         agent = self.state.current_player()
-        target_indices = [self.state.enemies.index(target) for target in targets]
-        logger.debug(f"PARTY {self.state.party.index(agent)} --({action.name})-> ENEMY {target_indices}")
+        target_ids = [target.id for target in targets]
+        logger.debug(f"PARTY {self.state.party.index(agent)} --({action.name})-> ENEMY {target_ids}")
 
         self.state, enemy_kill_reward = agent.execute(self.state, action, targets)
         reward += GOLD_REWARD_WEIGHT * enemy_kill_reward
@@ -244,14 +245,14 @@ class TurnBasedRPGEnv(object):
 
     def execute_enemy_turn(self, state):
         for i, enemy in enumerate(state.enemies):
-            actions = enemy.get_legal_actions()  # generic or special?
+            actions = enemy.get_legal_actions(self.entity_bank)  # generic or special?
             enemy_action = self.entity_bank.create_action(random.choice(actions), enemy)
             if enemy_action.n_targets > 0:
-                target = random.choices(state.party, k=enemy_action.n_targets)
+                target = random.sample(state.party, enemy_action.n_targets)
             else:
                 target = state.party
-            target_indices = [state.party.index(t) for t in target]
-            logger.debug(f"ENEMY {i} ({enemy.name}) --({enemy_action.name})-> PARTY {target_indices}")
+            target_ids = [t.id for t in target]
+            logger.debug(f"ENEMY {i} ({enemy.name}) --({enemy_action.name})-> PARTY {target_ids}")
             state, _ = enemy.execute(state, enemy_action, target)
             if len(state.party) == 0: break  # automatically end turn if all party members died
         for ally in state.party:
