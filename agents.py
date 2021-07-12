@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
+import math
 import random
 import string
 from typing import List, Tuple
 
 import numpy as np
+import pandas as pd
 
 from base_logger import logger
 from interactibles import Item
@@ -128,9 +130,10 @@ class Ally(Agent):
         self.mp += item.mp_bonus
         self.max_hp += item.hp_bonus
         self.max_mp += item.mp_bonus
+        self.items.append(item)
 
     def get_candidate_moves(self):
-        return self.special_moves + [item.move for item in self.items]
+        return self.special_moves + [item.move for item in self.items if not pd.isnull(item.move)]
 
 
 @dataclass

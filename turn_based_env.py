@@ -147,7 +147,7 @@ class EntityBank:
                 name=name,
                 effect_scaling='absolute',
                 n_targets=1,
-                target_type='ally' if isinstance(agent, Enemy) else 'enemy',
+                target_type='opponent',
                 hp_delta=-agent.attack,
             )
         else:
@@ -219,6 +219,8 @@ class TurnBasedRPGEnv(object):
             enemies.append(enemy)
         self.state.set_enemies(enemies)
         enemy_list = [e.id for e in enemies]
+        for ally in self.state.party:
+            ally.has_gone = False
         logger.info(f"NEW LEVEL {self.state.difficulty}: {enemy_list}")
 
     def step(self, action: Action, targets: List[Agent], dry_run: Optional[bool] = False) -> Tuple[Tuple, int, bool]:
@@ -263,10 +265,11 @@ class TurnBasedRPGEnv(object):
         for i, enemy in enumerate(state.enemies):
             actions = enemy.get_legal_actions(self.entity_bank)  # generic or special?
             enemy_action = self.entity_bank.create_action(random.choice(actions), enemy)
+            target_list = state.party if enemy_action.target_type == 'opponent' else state.enemies
             if enemy_action.n_targets > 0:
-                target = random.sample(state.party, enemy_action.n_targets)
+                target = random.sample(target_list, enemy_action.n_targets)
             else:
-                target = copy(state.party)
+                target = copy(target_list)
             target_ids = [t.id for t in target]
             logger.debug(f"ENEMY {i} ({enemy.name}) --({enemy_action.name})-> PARTY {target_ids}")
             state, _ = enemy.execute(state, enemy_action, target)
