@@ -27,6 +27,7 @@ class Agent:
     status_resist: float = 0
     special_moves: List[str] = field(default_factory=list)
     has_gone: bool = False
+    crit_p: float = 0.05
 
     def __post_init__(self):
         self.max_hp = self.hp
@@ -130,6 +131,7 @@ class Ally(Agent):
         self.mp += item.mp_bonus
         self.max_hp += item.hp_bonus
         self.max_mp += item.mp_bonus
+        self.crit_p += item.crit_bonus
         self.items.append(item)
 
     def get_candidate_moves(self):

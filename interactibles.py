@@ -10,3 +10,4 @@ class Item:
     mp_bonus: int = 0
     attack_bonus: int = 0
     defense_bonus: int = 0
+    crit_bonus: float = 0.

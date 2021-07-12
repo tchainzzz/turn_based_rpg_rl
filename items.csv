@@ -1,4 +1,4 @@
-name,type,move,hp_bonus,mp_bonus,attack_bonus,defense_bonus
-big_sword,weapon,,0,0,10,0
-potato_shield,armor,,8,0,0,0
-tasty_rock,item,minor_heal,0,5,0,0
+name,type,move,hp_bonus,mp_bonus,attack_bonus,defense_bonus,crit_bonus
+big_sword,weapon,,0,0,10,0,0.
+potato_shield,armor,,8,0,0,0,0.
+tasty_rock,item,minor_heal,0,5,0,0,0.
