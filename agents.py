@@ -41,14 +41,22 @@ class Agent:
         repr_str += f" {self.name} (id: {self.id})"
         return repr_str
 
-    def execute(self, state, action, target_list):
-        reward = 0
-        effective_hp_cost = self.hp * action.hp_cost if action.hp_cost < 1 else action.hp_cost
-        effective_mp_cost = self.mp * action.mp_cost if action.mp_cost < 1 else action.mp_cost
-        effective_attack_cost = self.attack * action.attack_cost if action.attack_cost < 1 else action.attack_cost
-        effective_defense_cost = self.defense * action.defense_cost if action.defense_cost < 1 else action.defense_cost
+    def effect_scale(self, target_field: str, action, action_field: str):
+        if action.effect_scaling == 'proportional':
+            return getattr(self, target_field) * getattr(action, action_field)
+        else:
+            return getattr(action, action_field)
 
-        effective_hp_delta = self.attack * action.hp_delta if action.hp_delta < 1 else action.hp_delta
+    def execute(self, state, action, target_list):
+        target_ids = [target.id for target in target_list]
+        logger.debug(f"AGENT {self.id} --({action.name})-> AGENT {target_ids}\nParameters:{action.pretty_repr()}")
+        reward = 0
+        effective_hp_cost = self.effect_scale('hp', action, 'hp_cost')
+        effective_mp_cost = self.effect_scale('mp', action, 'mp_cost')
+        effective_attack_cost = self.effect_scale('attack', action, 'attack_cost')
+        effective_defense_cost = self.effect_scale('defense', action, 'defense_cost')
+        effective_hp_delta = self.effect_scale('attack', action, 'hp_delta')
+
         # TODO: effective_mp/atk/def_delta seems very niche, probably not going to implement now
 
         self.hp = np.clip(self.hp - effective_hp_cost, 0, self.max_hp)

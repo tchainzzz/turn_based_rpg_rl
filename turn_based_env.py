@@ -69,6 +69,7 @@ class Action:
     name: str
     n_targets: int # number, or -1 for all
     target_type: str # ally or enemy
+    effect_scaling: str # proportional or absolute
 
     hp_cost: int = 0
     mp_cost: int = 0
@@ -84,6 +85,9 @@ class Action:
     status_target: str = None
     status_target_p: float = 1.
     effect_duration: int = 0
+
+    def pretty_repr(self):
+        return "\n".join(["=".join([field_name, str(value)]) for field_name, value in self.__dict__.items()])
 
 
 class EntityBank:
@@ -141,6 +145,7 @@ class EntityBank:
         if name == FALLBACK_ATTACK_NAME:
             return Action(
                 name=name,
+                effect_scaling='absolute',
                 n_targets=1,
                 target_type='ally' if isinstance(agent, Enemy) else 'enemy',
                 hp_delta=-agent.attack,
@@ -223,8 +228,6 @@ class TurnBasedRPGEnv(object):
             return self.state, reward, True
         copy_state = deepcopy(self.state)
         agent = self.state.current_player()
-        target_ids = [target.id for target in targets]
-        logger.debug(f"PARTY {self.state.party.index(agent)} --({action.name})-> ENEMY {target_ids}")
 
         self.state, enemy_kill_reward = agent.execute(self.state, action, targets)
         reward += GOLD_REWARD_WEIGHT * enemy_kill_reward

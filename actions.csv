@@ -1,4 +1,4 @@
-name,n_targets,target_type,hp_cost,mp_cost,attack_cost,defense_cost,status_self,status_self_p,hp_delta,mp_delta,attack_delta,defense_delta,status_target,status_target_p,effect_duration
-mega_slash,1,enemy,0,5,0,0,None,1.,-10,0,0,0,None,1.,0
-spin_move,-1,enemy,0,10,0,0,None,1.,-8,0,0,0,None,1.,0
-minor_heal,1,ally,0,2,0,0,None,1.,20,0,0,0,None,1.,0
+name,n_targets,target_type,effect_scaling,hp_cost,mp_cost,attack_cost,defense_cost,status_self,status_self_p,hp_delta,mp_delta,attack_delta,defense_delta,status_target,status_target_p,effect_duration
+mega_slash,1,enemy,proportional,0,0,0,0,None,1.,-1.5,0,0,0,None,1.,0
+spin_move,-1,enemy,proportional,0,0,0,0,None,1.,-0.8,0,0,0,None,1.,0
+minor_heal,1,ally,absolute,0,2,0,0,None,1.,20,0,0,0,None,1.,0
