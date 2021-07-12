@@ -43,14 +43,22 @@ class Agent:
 
     def execute(self, state, action, target_list):
         reward = 0
-        self.hp = np.clip(self.hp - action.hp_cost, 0, self.max_hp)
-        self.mp = np.clip(self.mp - action.mp_cost, 0, self.max_mp)
-        self.attack = max(self.attack - action.attack_cost, 0)
-        self.defense = max(self.defense - action.defense_cost, 0)
+        effective_hp_cost = self.hp * action.hp_cost if action.hp_cost < 1 else action.hp_cost
+        effective_mp_cost = self.mp * action.mp_cost if action.mp_cost < 1 else action.mp_cost
+        effective_attack_cost = self.attack * action.attack_cost if action.attack_cost < 1 else action.attack_cost
+        effective_defense_cost = self.defense * action.defense_cost if action.defense_cost < 1 else action.defense_cost
+
+        effective_hp_delta = self.attack * action.hp_delta if action.hp_delta < 1 else action.hp_delta
+        # TODO: effective_mp/atk/def_delta seems very niche, probably not going to implement now
+
+        self.hp = np.clip(self.hp - effective_hp_cost, 0, self.max_hp)
+        self.mp = np.clip(self.mp - effective_mp_cost, 0, self.max_mp)
+        self.attack = max(self.attack - effective_attack_cost, 0)
+        self.defense = max(self.defense - effective_defense_cost, 0)
         if random.random() < action.status_self_p:
             self.status = action.status_self
         for target in target_list:
-            target.hp = np.clip(target.hp + action.hp_delta, 0, target.max_hp)
+            target.hp = np.clip(target.hp + effective_hp_delta, 0, target.max_hp)
             if target.hp == 0:
                 info_str = target.short_repr()
                 if isinstance(target, Ally):
@@ -110,6 +118,8 @@ class Ally(Agent):
         self.attack += item.attack_bonus
         self.hp += item.hp_bonus
         self.mp += item.mp_bonus
+        self.max_hp += item.hp_bonus
+        self.max_mp += item.mp_bonus
 
     def get_candidate_moves(self):
         return self.special_moves + [item.move for item in self.items]

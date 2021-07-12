@@ -4,8 +4,11 @@ from copy import copy
 import random
 
 if __name__ == '__main__':
-    env = TurnBasedRPGEnv(['hero', 'test_ally'], ally_file="allies.csv", enemy_file="enemies.csv", action_file="actions.csv")
-
+    equipment = [
+        ('big_sword', None, None),
+        (None, None, None)
+        ]
+    env = TurnBasedRPGEnv(['hero', 'test_ally'], equipment, ally_file="allies.csv", enemy_file="enemies.csv", item_file="items.csv", action_file="actions.csv")
     env.reset()
     is_terminal = False
     while not is_terminal:

@@ -151,6 +151,7 @@ class EntityBank:
 
 class TurnBasedRPGEnv(object):
     def __init__(self, party: List[str],
+                 equipment,
                  item_file=None,
                  ally_file=None,
                  enemy_file=None,
@@ -165,25 +166,34 @@ class TurnBasedRPGEnv(object):
             enemy_file=enemy_file,
             action_file=action_file,
         )
-        self.state = State([
-            self.entity_bank.create_ally(ally_class, position=i) \
-                        for i, ally_class \
-                        in enumerate(party)],
-            difficulty=starting_difficulty,
-        )
+
+        # change on reset
+        party = [self.entity_bank.create_ally(ally_class, position=i) \
+                    for i, ally_class \
+                    in enumerate(party)]
+        party = self.equip_party(party, equipment)
+        self.state = State(party, difficulty=starting_difficulty)
+        self.original_state = deepcopy(self.state)
+
+        # never change
         self.dungeon_repeat_interval = dungeon_repeat_interval
         self.starting_difficulty = starting_difficulty
-        self.original_party = deepcopy(party)
         self.action_step = 0 # for logging only
         self.print_every = print_every
         self.new_level()
 
+    def equip_party(self, party, equipment):
+        for ally, item_names in zip(party, equipment):
+            for item in item_names:
+                if item is not None:
+                    item_obj = self.entity_bank.create_item(item)
+                    logger.debug(f"PARTY {ally.id} EQUIPS {item_obj.name}")
+                    ally.equip(item_obj)
+        return party
+
     def reset(self):
         self.seed()
-        party = [self.entity_bank.create_ally(ally_class, position=i) \
-                    for i, ally_class \
-                    in enumerate(self.original_party)]
-        self.state = State(party, difficulty=self.starting_difficulty)
+        self.state = self.original_state
         self.action_step = 0
         self.new_level()
         print(f"INITIAL STATE\n{self.state.format_battle_table()}")
