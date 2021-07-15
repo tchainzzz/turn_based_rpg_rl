@@ -84,7 +84,9 @@ class Action:
     defense_delta: int = 0
     status_target: str = None
     status_target_p: float = 1.
-    effect_duration: int = 0
+    effect_max_duration: int = 0
+    escape_p: float = 0.
+    hp_delta_effect: float = 0.
 
     def pretty_repr(self):
         return "\n".join(["=".join([field_name, str(value)]) for field_name, value in self.__dict__.items()])
